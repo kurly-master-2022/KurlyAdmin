@@ -9,7 +9,7 @@ plugins {
 }
 
 group = "master.kurly"
-version = "0.3"
+version = "0.0.1"
 java.sourceCompatibility = JavaVersion.VERSION_11
 val bootJar: BootJar by tasks
 
@@ -23,6 +23,11 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+
+    // Spring JPA
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+    // MySQL driver
+    implementation("mysql:mysql-connector-java")
 }
 
 tasks.withType<KotlinCompile> {
