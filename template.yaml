@@ -1,0 +1,77 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  kurlyadmin
+  SAM Template for kurly-admin
+Globals:
+  Function:
+    Timeout: 480
+
+Resources:
+
+  KurlyAdminApplication:
+    Type: AWS::ElasticBeanstalk::Application
+    Properties:
+      Description: Kurly Admin Web Application
+      ApplicationName: kurly-admin
+
+  KurlyAdminVersion:
+    Type: AWS::ElasticBeanstalk::ApplicationVersion
+    Properties:
+      ApplicationName: !Ref KurlyAdminApplication
+      SourceBundle: ebpackage
+
+  KurlyAdminConfigurationTemplate:
+    Type: AWS::ElasticBeanstalk::ConfigurationTemplate
+    Properties:
+      ApplicationName: !Ref KurlyAdminApplication
+      SolutionStackName: 64bit Amazon Linux 2 v3.3.1 running Corretto 11
+      OptionSettings:
+        - Namespace: aws:autoscaling:launchconfiguration
+          OptionName: IamInstanceProfile
+          Value: !Ref KurlyAdminInstanceRole
+        - Namespace: aws:elasticbeanstalk:environment
+          OptionName: EnvironmentType
+          Value: SingleInstance
+
+  KurlyAdminEnv:
+    Type: AWS::ElasticBeanstalk::Environment
+    DependsOn: KurlyAdminVersion
+    Properties:
+      ApplicationName: !Ref KurlyAdminApplication
+      TemplateName: !Ref KurlyAdminConfigurationTemplate
+      VersionLabel: !Ref KurlyAdminVersion
+
+  KurlyAdminRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AWSElasticBeanstalkWebTier
+        - arn:aws:iam::aws:policy/AWSElasticBeanstalkWorkerTier
+        - arn:aws:iam::aws:policy/AWSElasticBeanstalkMulticontainerDocker
+        - arn:aws:iam::aws:policy/CloudWatchFullAccess
+        - arn:aws:iam::aws:policy/CloudWatchEventsFullAccess
+        - arn:aws:iam::aws:policy/AmazonSNSFullAccess
+        - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
+
+  KurlyAdminInstanceRole:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - !Ref KurlyAdminRole
+
+Outputs:
+  KurlyAdminAddress:
+    Description: "Kurly Admin REST API Address"
+    Value: !Sub
+      - 'http://${EndpointURL}'
+      - EndpointURL: !GetAtt KurlyAdminEnv.EndpointURL
