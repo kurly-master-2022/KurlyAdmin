@@ -11,7 +11,6 @@ plugins {
 group = "master.kurly"
 version = "0.3"
 java.sourceCompatibility = JavaVersion.VERSION_11
-val jar: Jar by tasks
 val bootJar: BootJar by tasks
 
 repositories {
@@ -40,7 +39,7 @@ tasks.withType<Test> {
 fun addProcfile(dir: String){
     println("Creating a Procfile at $dir")
     File(dir, "Procfile").appendText(
-        "${project.name}: java -jar -Dserver.port=5000 ${jar.archiveFileName.get()}"
+        "${project.name}: java -jar -Dserver.port=5000 ${bootJar.archiveFileName.get()}"
     )
 }
 
