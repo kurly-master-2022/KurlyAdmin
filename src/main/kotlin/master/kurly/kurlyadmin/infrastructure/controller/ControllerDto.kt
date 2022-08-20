@@ -1,5 +1,6 @@
 package master.kurly.kurlyadmin.infrastructure.controller
 
+import master.kurly.kurlyadmin.domain.metric.Metric
 import master.kurly.kurlyadmin.domain.metric.SourceType
 import master.kurly.kurlyadmin.domain.metric.ThresholdDirection
 import master.kurly.kurlyadmin.domain.product.ProductMetricImportance
@@ -35,4 +36,9 @@ data class MetricCreateDto(
     val scheduled: Boolean,
     val schedCron: String?,
     val description: String
+)
+
+data class ProductMappingMetricsDto(
+    val metric: Metric,
+    val importance: ProductMetricImportance
 )

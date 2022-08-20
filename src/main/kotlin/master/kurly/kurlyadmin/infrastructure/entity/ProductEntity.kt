@@ -1,14 +1,9 @@
 package master.kurly.kurlyadmin.infrastructure.entity
 
-import master.kurly.kurlyadmin.domain.metric.Metric
 import master.kurly.kurlyadmin.domain.product.Product
-import master.kurly.kurlyadmin.domain.product.ProductMetricImportance
-import master.kurly.kurlyadmin.domain.product.ProductRepository
 import org.springframework.data.repository.CrudRepository
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 import javax.persistence.*
-import javax.transaction.Transactional
 
 @Entity
 @Table(name = "product")

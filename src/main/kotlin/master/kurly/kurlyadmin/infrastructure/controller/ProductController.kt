@@ -29,14 +29,16 @@ class ProductController(
     @GetMapping("/metrics")
     fun getMetricsById(
         @RequestParam("id") id: Long
-    ): Map<Metric, ProductMetricImportance>? {
+    ): List<ProductMappingMetricsDto>? {
         return this.productService.getMetricsOfProductById(id)
+            ?.map { ProductMappingMetricsDto(it.key, it.value) }
     }
 
     @PostMapping("/metric")
     fun addMetricToProduct(
         @RequestBody productMetricDto: ProductMetricDto
     ): Boolean {
+        println(productMetricDto)
         return this.productService.addMetricToProduct(
             productMetricDto.productId, productMetricDto.metricId
         )
@@ -46,6 +48,7 @@ class ProductController(
     fun deleteMetricToProduct(
         @RequestBody productMetricDto: ProductMetricDto
     ): Boolean {
+        println(productMetricDto)
         return this.productService.removeMetricToProduct(
             productMetricDto.productId, productMetricDto.metricId
         )
