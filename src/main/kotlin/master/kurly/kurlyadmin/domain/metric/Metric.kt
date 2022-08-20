@@ -1,6 +1,5 @@
 package master.kurly.kurlyadmin.domain.metric
 
-import master.kurly.kurlyadmin.domain.product.Product
 import java.time.LocalDateTime
 
 enum class SourceType{
@@ -8,25 +7,38 @@ enum class SourceType{
 }
 
 enum class ThresholdDirection{
-    UP, DOWN;
+    GreaterThanOrEqualToThreshold,
+    GreaterThanThreshold,
+    LessThanThreshold,
+    LessThanOrEqualToThreshold,
+
+    // 실제로 이 값을 사용할 것인지?
+    LessThanLowerOrGreaterThanUpperThreshold,
+    LessThanLowerThreshold,
+    GreaterThanUpperThreshold
 }
 
 data class Metric(
     val id: Long,
+    val nickname: String,
     val name: String,
+
     val sourceType: SourceType,
     val source: String,
+
+    val isScheduled: Boolean,
     val cronSchedule: String?,
     val s3ObjectKey: String?,
+
     val threshold: Double,
     val thresholdDirection: ThresholdDirection,
+
     val description: String,
     val isAvailable: Boolean = false
 ){
     init {
-        if((this.cronSchedule == null && this.s3ObjectKey == null) ||
-            (this.cronSchedule != null && this.s3ObjectKey != null)) {
-            throw IllegalArgumentException("주기 실행 값과 비주기 실행 값이 동시에 주어졌습니다.")
+        if (this.isScheduled && this.cronSchedule == null){
+            throw IllegalArgumentException("주기 실행 작업인데 실행 cron 식이 주어지지 않았습니다.")
         }
     }
 }

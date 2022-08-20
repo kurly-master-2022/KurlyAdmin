@@ -50,10 +50,9 @@ class MetricController(
 
     @PostMapping("/create")
     fun createMetric(
-        // 규격에 맞는 것 만들어야함.
-    ){
-        TODO()
-        // this.metricService.createMetric()
+        @RequestBody metricCreateDto: MetricCreateDto
+    ): Boolean {
+        return this.metricService.createMetric(metricCreateDto)
     }
 
     @DeleteMapping("/delete")

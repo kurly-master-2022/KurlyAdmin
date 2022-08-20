@@ -1,5 +1,7 @@
 package master.kurly.kurlyadmin.infrastructure.controller
 
+import master.kurly.kurlyadmin.domain.metric.SourceType
+import master.kurly.kurlyadmin.domain.metric.ThresholdDirection
 import master.kurly.kurlyadmin.domain.product.ProductMetricImportance
 
 data class ChangeProductPriceDto(
@@ -21,4 +23,16 @@ data class ProductMetricImportanceDto(
 data class MetricSubscriberDto(
     val metricId: Long,
     val subscriberId: Long
+)
+
+data class MetricCreateDto(
+    val nickname: String,
+    val name: String,
+    val source: String,
+    val sourceType: SourceType,
+    val alarmThreshold: Double,
+    val alarmComparator: ThresholdDirection,
+    val scheduled: Boolean,
+    val schedCron: String?,
+    val description: String
 )

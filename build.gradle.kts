@@ -9,7 +9,7 @@ plugins {
 }
 
 group = "master.kurly"
-version = "0.0.2"
+version = "0.0.3"
 java.sourceCompatibility = JavaVersion.VERSION_11
 val bootJar: BootJar by tasks
 
@@ -28,6 +28,8 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     // MySQL driver
     implementation("mysql:mysql-connector-java")
+    // AWS cloudwatch
+    implementation("com.amazonaws:aws-java-sdk-cloudwatch:1.12.283")
 }
 
 tasks.withType<KotlinCompile> {

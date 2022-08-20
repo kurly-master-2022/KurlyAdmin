@@ -1,10 +1,16 @@
 spring:
   datasource:
-    username: root
+    username: ${PUT_USERNAME_HERE}
     password: ${PUT_PASSWORD_HERE}
-    url: jdbc:mysql://127.0.0.1:3306/test_db
+    url: ${PUT_URL_HERE}
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: update
     show-sql: false
+
+custom-variable:
+  amazon:
+    cloudwatch:
+      namespace: "Custom Metric Demo"
+  make-initial-data: false

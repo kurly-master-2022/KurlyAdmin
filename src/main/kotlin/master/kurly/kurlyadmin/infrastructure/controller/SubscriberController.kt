@@ -31,8 +31,10 @@ class SubscriberController(
     }
 
     @PostMapping("/create")
-    fun createSubscriber(){
-        // TODO("구현 필요")
+    fun createSubscriber(
+        @RequestBody subscriber: Subscriber
+    ): Boolean {
+        return this.subscriberService.createSubscriber(subscriber)
     }
 
     @DeleteMapping("/delete")

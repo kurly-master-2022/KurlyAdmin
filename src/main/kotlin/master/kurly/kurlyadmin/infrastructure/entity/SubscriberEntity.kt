@@ -18,13 +18,10 @@ class SubscriberEntity(
     val name: String = "",
 
     @Column(name = "type", nullable = false)
-    val subscribeType: SubscribeType = SubscribeType.ALL,
+    val subscribeType: SubscribeType = SubscribeType.EMAIL,
 
     @Column(name = "email", nullable = false)
-    val email: String = "",
-
-    @Column(name = "phone", nullable = false)
-    val phoneNumber: String = "",
+    val uri: String = "",
 
     @OneToMany(mappedBy = "subscriberEntity")
     var metricInfo: List<MetricSubscriberEntity> = listOf()
@@ -33,10 +30,8 @@ class SubscriberEntity(
     fun toSubscriber(): Subscriber {
         return Subscriber(
             id = this.id!!,
-            name = this.name,
             subscribeType = this.subscribeType,
-            email = this.email,
-            phoneNumber = this.phoneNumber
+            uri = this.uri
         )
     }
 
@@ -46,8 +41,7 @@ class SubscriberEntity(
                 id = subscriber.id,
                 name = subscriber.name,
                 subscribeType = subscriber.subscribeType,
-                email = subscriber.email,
-                phoneNumber = subscriber.phoneNumber
+                uri = subscriber.uri
             )
         }
     }

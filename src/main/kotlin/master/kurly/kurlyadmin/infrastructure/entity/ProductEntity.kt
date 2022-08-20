@@ -33,12 +33,6 @@ class ProductEntity (
     @Column(name = "thumbnail", nullable = false, length = 100)
     var thumbnail: String = "",
 
-    @Column(name = "updated_at", nullable = false)
-    var updatedAt: LocalDateTime = LocalDateTime.now(),
-
-    @Column(name = "created_at", nullable = false)
-    var createdAt: LocalDateTime = LocalDateTime.now(),
-
     @OneToMany(mappedBy = "productEntity")
     var metricInfo: List<ProductMetricEntity> = listOf()
 ){

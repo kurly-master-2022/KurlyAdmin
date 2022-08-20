@@ -1,13 +1,14 @@
 package master.kurly.kurlyadmin.domain.subscriber
 
 enum class SubscribeType{
-    EMAIL, SMS, ALL
+    EMAIL, SMS
 }
 
 data class Subscriber(
     val id: Long,
-    val name: String,
     val subscribeType: SubscribeType,
-    val email: String,
-    val phoneNumber: String
-)
+    val uri: String
+){
+    // name 은 고유키
+    val name = "${this.subscribeType.name}.${this.uri}"
+}

@@ -5,8 +5,10 @@ import master.kurly.kurlyadmin.domain.metric.MetricHistory
 import master.kurly.kurlyadmin.domain.metric.MetricRepository
 import master.kurly.kurlyadmin.domain.product.Product
 import master.kurly.kurlyadmin.domain.subscriber.Subscriber
+import master.kurly.kurlyadmin.infrastructure.controller.MetricCreateDto
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
+import javax.transaction.Transactional
 
 @Service
 class MetricService(
@@ -42,8 +44,23 @@ class MetricService(
         }
     }
 
-    fun createMetric(metric: Metric): Boolean {
-        return this.metricRepository.createMetric(metric)
+    fun createMetric(metricCreateDto: MetricCreateDto): Boolean {
+        return Metric(
+            id = 0,
+            nickname = metricCreateDto.nickname,
+            name = metricCreateDto.name,
+            sourceType = metricCreateDto.sourceType,
+            source = metricCreateDto.source,
+            isScheduled = metricCreateDto.scheduled,
+            cronSchedule = metricCreateDto.schedCron,
+            s3ObjectKey = null,
+            threshold = metricCreateDto.alarmThreshold,
+            thresholdDirection = metricCreateDto.alarmComparator,
+            description = metricCreateDto.description,
+            isAvailable = false
+        ).let {
+            this.metricRepository.createMetric(it)
+        }
     }
 
     fun deleteMetricById(metricId: Long): Boolean {

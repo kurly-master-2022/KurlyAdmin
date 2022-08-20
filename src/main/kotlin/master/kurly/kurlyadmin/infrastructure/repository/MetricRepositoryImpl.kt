@@ -5,16 +5,16 @@ import master.kurly.kurlyadmin.domain.metric.MetricHistory
 import master.kurly.kurlyadmin.domain.metric.MetricRepository
 import master.kurly.kurlyadmin.domain.product.Product
 import master.kurly.kurlyadmin.domain.subscriber.Subscriber
+import master.kurly.kurlyadmin.infrastructure.api.MetricWorkflowApi
+import master.kurly.kurlyadmin.infrastructure.api.CloudWatchApi
 import master.kurly.kurlyadmin.infrastructure.entity.*
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Repository
 import org.springframework.web.client.HttpServerErrorException
-import java.net.URI
-import java.net.http.HttpClient
-import java.net.http.HttpRequest
-import java.net.http.HttpResponse
 import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.ZonedDateTime
 import javax.transaction.Transactional
 
 @Repository
@@ -22,30 +22,12 @@ class MetricRepositoryImpl(
     private val metricEntityRepository: MetricEntityRepository,
     private val subscriberEntityRepository: SubscriberEntityRepository,
     private val productMetricEntityRepository: ProductMetricEntityRepository,
-    private val metricSubscriberEntityRepository: MetricSubscriberEntityRepository
+    private val metricSubscriberEntityRepository: MetricSubscriberEntityRepository,
+    private val metricWorkflowApi: MetricWorkflowApi,
+    private val cloudWatchApi: CloudWatchApi
 ): MetricRepository {
-    private val httpClient: HttpClient = HttpClient.newBuilder()
-        .followRedirects(HttpClient.Redirect.ALWAYS)
-        .build()
     private val logger = LoggerFactory.getLogger(this::class.java)
-    private val req1 = "test"
-
-    private fun postRequest(requestUrl: String, postBody: String): HttpResponse<String> {
-        val postRequest = HttpRequest.newBuilder()
-            .uri(URI.create(requestUrl))
-            .POST(HttpRequest.BodyPublishers.ofString(postBody))
-            .build()
-        return this.httpClient.send(postRequest, HttpResponse.BodyHandlers.ofString())
-    }
-
-    private fun getRequest(requestUrl: String, parameters: Map<String, String>? = null): HttpResponse<String> {
-        val parameterString = parameters?.map { "${it.key}=${it.value}" }?.joinToString(separator = "&")?.let { "?${it}" } ?: ""
-        val getRequest = HttpRequest.newBuilder()
-            .uri(URI.create("${requestUrl}${parameterString}"))
-            .build()
-        return this.httpClient.send(getRequest, HttpResponse.BodyHandlers.ofString())
-    }
-
+    private val seoulZone = ZoneId.of("Asia/Seoul")
 
     override fun getAllMetrics(): List<Metric> {
         return this.metricEntityRepository.findAll().map { it.toMetric() }
@@ -57,8 +39,10 @@ class MetricRepositoryImpl(
 
     @Transactional
     override fun createMetric(metric: Metric): Boolean {
-        this.metricEntityRepository.save(MetricEntity.fromMetric(metric))
-        this.postRequest("test", "testBody").let {
+        this.metricEntityRepository.save(
+            MetricEntity.fromMetric(metric).apply { this.id = null }
+        )
+        this.metricWorkflowApi.postRequest("test", "testBody").let {
             if (it.statusCode() != HttpStatus.OK.value()) {
                 throw Error(
                     "메트릭 워크플로우를 만드는 데 실패했습니다!",
@@ -136,12 +120,15 @@ class MetricRepositoryImpl(
     }
 
     override fun isMetricAlarmTriggered(metric: Metric): Boolean {
-        this.getRequest("isAlarmAvailable", mapOf("metricId" to metric.id.toString()))
+        this.metricWorkflowApi.getRequest("isAlarmAvailable", mapOf("metricId" to metric.id.toString()))
         TODO()
     }
 
     override fun getMetricValueHistory(metric: Metric, startAt: LocalDateTime, endAt: LocalDateTime): MetricHistory? {
-        this.getRequest("isAlarmAvailable", mapOf("metricId" to metric.id.toString()))
-        TODO()
+        return this.cloudWatchApi.getMetricData(
+            metric,
+            ZonedDateTime.of(startAt, seoulZone),
+            ZonedDateTime.of(endAt, seoulZone)
+        )
     }
 }

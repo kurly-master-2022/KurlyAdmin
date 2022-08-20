@@ -1,6 +1,7 @@
 package master.kurly.kurlyadmin.infrastructure.entity
 
 import master.kurly.kurlyadmin.domain.metric.*
+import master.kurly.kurlyadmin.infrastructure.controller.MetricCreateDto
 import org.springframework.data.repository.CrudRepository
 import org.springframework.stereotype.Repository
 import javax.persistence.*
@@ -13,8 +14,12 @@ class MetricEntity (
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long? = null,
 
+    @Column(name = "nickname", nullable = false, length = 100)
+    var nickname: String = "",
+
     @Column(name = "name", nullable = false, length = 100)
     var name: String = "",
+
 
     @Column(name = "source_type", nullable = false)
     var sourceType: SourceType = SourceType.API,
@@ -22,23 +27,30 @@ class MetricEntity (
     @Column(name = "source", nullable = false, length = 400)
     var source: String = "",
 
+
+    @Column(name = "is_scheduled", nullable = false)
+    var isScheduled: Boolean = false,
+
     @Column(name = "schedule", nullable = true, length = 100)
     var schedule: String? = null,
 
     @Column(name = "s3_object_key", nullable = true, length = 100)
     var s3ObjectKey: String? = null,
 
+
     @Column(name = "threshold", nullable = true)
     var threshold: Double = 0.0,
 
     @Column(name = "threshold_direction", nullable = true)
-    var thresholdDirection: ThresholdDirection = ThresholdDirection.UP,
+    var thresholdDirection: ThresholdDirection = ThresholdDirection.GreaterThanThreshold,
+
+
+    @Column(name = "description", nullable = false)
+    var description: String = "설명 없음",
 
     @Column(name = "is_available", nullable = false)
     var isAvailable: Boolean = false,
 
-    @Column(name = "description", nullable = false)
-    var description: String = "설명 없음",
 
     @OneToMany(mappedBy = "metricEntity")
     var productInfo: List<ProductMetricEntity> = listOf(),
@@ -49,9 +61,11 @@ class MetricEntity (
     fun toMetric(): Metric{
         return Metric(
             id = this.id!!,
+            nickname = this.nickname,
             name = this.name,
             sourceType = this.sourceType,
             source = this.source,
+            isScheduled = this.isScheduled,
             cronSchedule = this.schedule,
             s3ObjectKey = this.s3ObjectKey,
             threshold = this.threshold,
@@ -65,9 +79,11 @@ class MetricEntity (
         fun fromMetric(metric: Metric): MetricEntity {
             return MetricEntity(
                 id = metric.id,
+                nickname = metric.nickname,
                 name = metric.name,
                 sourceType = metric.sourceType,
                 source = metric.source,
+                isScheduled = metric.isScheduled,
                 schedule = metric.cronSchedule,
                 s3ObjectKey = metric.s3ObjectKey,
                 threshold = metric.threshold,
