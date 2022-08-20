@@ -1,8 +1,6 @@
-package master.kurly.kurlyadmin.infrastructure.repository
+package master.kurly.kurlyadmin.infrastructure.entity
 
 import master.kurly.kurlyadmin.domain.metric.*
-import master.kurly.kurlyadmin.domain.product.Product
-import master.kurly.kurlyadmin.domain.subscriber.Subscriber
 import org.springframework.data.repository.CrudRepository
 import org.springframework.stereotype.Repository
 import javax.persistence.*
@@ -34,13 +32,19 @@ class MetricEntity (
     var threshold: Double = 0.0,
 
     @Column(name = "threshold_direction", nullable = true)
-    var thresholdDirection: Boolean = false,
+    var thresholdDirection: ThresholdDirection = ThresholdDirection.UP,
 
     @Column(name = "is_available", nullable = false)
     var isAvailable: Boolean = false,
 
+    @Column(name = "description", nullable = false)
+    var description: String = "설명 없음",
+
     @OneToMany(mappedBy = "metricEntity")
-    var productInfo: List<ProductMetricEntity> = listOf()
+    var productInfo: List<ProductMetricEntity> = listOf(),
+
+    @OneToMany(mappedBy = "metricEntity")
+    var subscriberInfo: List<MetricSubscriberEntity> = listOf()
 ){
     fun toMetric(): Metric{
         return Metric(
@@ -51,36 +55,29 @@ class MetricEntity (
             cronSchedule = this.schedule,
             s3ObjectKey = this.s3ObjectKey,
             threshold = this.threshold,
-            thresholdDirection = ThresholdDirection.find(this.thresholdDirection)
+            thresholdDirection = this.thresholdDirection,
+            description = this.description,
+            isAvailable = this.isAvailable
         )
+    }
+
+    companion object{
+        fun fromMetric(metric: Metric): MetricEntity {
+            return MetricEntity(
+                id = metric.id,
+                name = metric.name,
+                sourceType = metric.sourceType,
+                source = metric.source,
+                schedule = metric.cronSchedule,
+                s3ObjectKey = metric.s3ObjectKey,
+                threshold = metric.threshold,
+                thresholdDirection = metric.thresholdDirection,
+                description = metric.description,
+                isAvailable = metric.isAvailable
+            )
+        }
     }
 }
 
 @Repository
 interface MetricEntityRepository: CrudRepository<MetricEntity, Long>
-
-@Repository
-class MetricRepositoryImpl(
-    private val metricEntityRepository: MetricEntityRepository,
-    private val productMetricEntityRepository: ProductMetricEntityRepository,
-): MetricRepository{
-    override fun getAllMetrics(): List<Metric> {
-        return this.metricEntityRepository.findAll().map { it.toMetric() }
-    }
-
-    override fun getProductsOfMetric(metric: Metric): List<Product>? {
-        return this.metricEntityRepository.findById(metric.id).orElse(null)
-            ?.let { metricEntity ->
-                this.productMetricEntityRepository.findByMetricId(metricEntity.id!!)
-                    .map { it.productEntity!!.toProduct() }
-            }
-    }
-
-    override fun getSubscribersOfMetric(metric: Metric): List<Subscriber>? {
-        TODO("Not yet implemented")
-    }
-
-    override fun isAlarmAvailable(metric: Metric): Boolean {
-        return this.metricEntityRepository.findById(metric.id).get().isAvailable
-    }
-}

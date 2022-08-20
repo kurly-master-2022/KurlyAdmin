@@ -1,4 +1,4 @@
-package master.kurly.kurlyadmin.infrastructure.repository
+package master.kurly.kurlyadmin.infrastructure.entity
 
 import master.kurly.kurlyadmin.domain.product.ProductMetricImportance
 import org.springframework.data.repository.CrudRepository

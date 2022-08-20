@@ -20,11 +20,25 @@ class ProductService(
     }
 
     fun getMetricsOfProductById(id: Long): Map<Metric, ProductMetricImportance>? {
-        return this.getProductById(id)?.findMetricAndImportance(this.productRepository)
+        return this.getProductById(id)
+            ?.let { this.productRepository.getMetricImportance(it) }
+    }
+
+    fun addMetricToProduct(productId: Long, metricId: Long): Boolean {
+        return this.productRepository.addMetricToProduct(productId, metricId)
+    }
+
+    fun removeMetricToProduct(productId: Long, metricId: Long): Boolean {
+        return this.productRepository.removeMetricToProduct(productId, metricId)
+    }
+
+    fun modifyImportanceOfMetricProduct(productId: Long, metricId: Long, importance: ProductMetricImportance): Boolean {
+        return this.productRepository.modifyMetricImportanceOfProduct(productId, metricId, importance)
     }
 
     @Transactional
     fun changeProductPrice(id: Long, price: Int): Product? {
-        return this.getProductById(id)?.changePrice(price, this.productRepository)
+        return this.getProductById(id)?.changePrice(price)
+            ?.also { this.productRepository.save(it) }
     }
 }

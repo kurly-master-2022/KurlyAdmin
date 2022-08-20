@@ -1,4 +1,4 @@
-package master.kurly.kurlyadmin.infrastructure.repository
+package master.kurly.kurlyadmin.infrastructure.entity
 
 import master.kurly.kurlyadmin.domain.metric.Metric
 import master.kurly.kurlyadmin.domain.product.Product
@@ -8,6 +8,7 @@ import org.springframework.data.repository.CrudRepository
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 import javax.persistence.*
+import javax.transaction.Transactional
 
 @Entity
 @Table(name = "product")
@@ -61,7 +62,7 @@ class ProductEntity (
     }
 
     companion object{
-        fun fromProduct(product: Product): ProductEntity{
+        fun fromProduct(product: Product): ProductEntity {
             return ProductEntity(
                 id = product.id,
                 name = product.name,
@@ -76,36 +77,3 @@ class ProductEntity (
 
 @Repository
 interface ProductEntityRepository: CrudRepository<ProductEntity, Long>
-
-@Repository
-class ProductRepositoryImpl(
-    private val productEntityRepository: ProductEntityRepository,
-    private val productMetricEntityRepository: ProductMetricEntityRepository
-): ProductRepository{
-    override fun getAllProducts(): List<Product> {
-        return this.productEntityRepository.findAll().map { it.toProduct() }
-    }
-
-    override fun findById(id: Long): Product? {
-        return this.productEntityRepository.findById(id).orElse(null).toProduct()
-    }
-
-    override fun getMetricImportance(product: Product): Map<Metric, ProductMetricImportance>? {
-        return this.productMetricEntityRepository.findByProductId(product.id)
-            .associate {
-                it.metricEntity!!.toMetric() to it.preference
-            }
-    }
-
-    override fun save(product: Product): Boolean {
-        val saveEntity = this.productEntityRepository.findById(product.id).orElse(null)
-            ?.let {
-                it.update(product)
-                it
-            }
-            ?: ProductEntity.fromProduct(product)
-        this.productEntityRepository.save(saveEntity)
-        return true
-    }
-
-}

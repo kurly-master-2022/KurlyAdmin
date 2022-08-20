@@ -15,15 +15,9 @@ data class Product(
     val link: String,
     val thumbnail: String,
 ){
-    fun findMetricAndImportance(
-        productRepository: ProductRepository
-    ): Map<Metric, ProductMetricImportance>? {
-        return productRepository.getMetricImportance(this)
-    }
 
     fun changePrice(
-        price: Int,
-        productRepository: ProductRepository
+        price: Int
     ): Product{
         return Product(
             id = this.id,
@@ -32,8 +26,6 @@ data class Product(
             description = this.description,
             link = this.link,
             thumbnail = this.thumbnail
-        ).also {
-            productRepository.save(it)
-        }
+        )
     }
 }

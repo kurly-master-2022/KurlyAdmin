@@ -1,30 +1,24 @@
 package master.kurly.kurlyadmin.infrastructure.controller
 
+import master.kurly.kurlyadmin.domain.product.ProductMetricImportance
+
 data class ChangeProductPriceDto(
     val productId: Long,
     val price: Int
 )
 
-data class AddMetricDto(
+data class ProductMetricDto(
     val productId: Long,
-    val metricIds: List<Long>
+    val metricId: Long
 )
 
-data class DeleteMetricDto(
-    val productId: Long,
-    val metricIds: List<Long>
-)
-
-data class ModifyMetricImportanceDto(
+data class ProductMetricImportanceDto(
     val productId: Long,
     val metricId: Long,
-    val importance: Int
+    val importance: ProductMetricImportance
 )
 
-data class NewMetricDto(
-    val name: String,
-    val sourceType: String,
-    val isPeriodic: Boolean,
-    val schedule: String?,
-    val description: String?
+data class MetricSubscriberDto(
+    val metricId: Long,
+    val subscriberId: Long
 )

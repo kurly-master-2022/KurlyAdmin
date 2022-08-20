@@ -9,15 +9,6 @@ enum class SourceType{
 
 enum class ThresholdDirection{
     UP, DOWN;
-
-    companion object{
-        fun find(boolean: Boolean): ThresholdDirection {
-            return when(boolean){
-                false -> DOWN
-                true -> UP
-            }
-        }
-    }
 }
 
 data class Metric(
@@ -29,28 +20,14 @@ data class Metric(
     val s3ObjectKey: String?,
     val threshold: Double,
     val thresholdDirection: ThresholdDirection,
+    val description: String,
+    val isAvailable: Boolean = false
 ){
     init {
         if((this.cronSchedule == null && this.s3ObjectKey == null) ||
             (this.cronSchedule != null && this.s3ObjectKey != null)) {
             throw IllegalArgumentException("주기 실행 값과 비주기 실행 값이 동시에 주어졌습니다.")
         }
-    }
-
-    fun isAlarmTriggered(): Boolean{
-        TODO()
-    }
-
-    fun isAlarmAvailable(
-        metricRepository: MetricRepository
-    ): Boolean{
-        return metricRepository.isAlarmAvailable(this)
-    }
-
-    fun findProducts(
-        metricRepository: MetricRepository
-    ): List<Product>?{
-        return metricRepository.getProductsOfMetric(this)
     }
 }
 

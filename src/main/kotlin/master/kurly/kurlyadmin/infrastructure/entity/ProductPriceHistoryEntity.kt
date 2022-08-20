@@ -1,4 +1,4 @@
-package master.kurly.kurlyadmin.repository
+package master.kurly.kurlyadmin.infrastructure.entity
 
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.CrudRepository
@@ -8,7 +8,7 @@ import javax.persistence.*
 
 @Entity
 @Table(name = "product_price_history")
-class ProductPriceHistory (
+class ProductPriceHistoryEntity (
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -16,7 +16,7 @@ class ProductPriceHistory (
 
     @JoinColumn(name = "pid")
     @ManyToOne
-    var product: Product? = null,
+    var productEntity: ProductEntity? = null,
 
     @Column(name = "datetime", nullable = false)
     var datetime: LocalDateTime = LocalDateTime.now(),
@@ -26,7 +26,7 @@ class ProductPriceHistory (
 ){
     fun toProductPriceHistoryDto(): ProductPriceHistoryDto {
         return ProductPriceHistoryDto(
-            productId = this.product!!.id!!,
+            productId = this.productEntity!!.id!!,
             datetime = this.datetime,
             price = this.price
         )
@@ -40,23 +40,23 @@ data class ProductPriceHistoryDto(
 )
 
 interface ProductPriceHistoryRepository{
-    fun getPriceHistoryOfProduct(product: Product): List<ProductPriceHistoryDto>?
+    fun getPriceHistoryOfProduct(productEntity: ProductEntity): List<ProductPriceHistoryDto>?
     fun getPriceHistoryOfProduct(productId: Long): List<ProductPriceHistoryDto>?
-    fun getPriceHistoryOfProduct(product: Product, datetime: LocalDateTime): List<ProductPriceHistoryDto>?
+    fun getPriceHistoryOfProduct(productEntity: ProductEntity, datetime: LocalDateTime): List<ProductPriceHistoryDto>?
     fun getPriceHistoryOfProduct(productId: Long, datetime: LocalDateTime): List<ProductPriceHistoryDto>?
 }
 
 @Repository
-interface ProductPriceHistoryJpaRepository: CrudRepository<ProductPriceHistory, Long>{
-    fun findByProductOrderByDatetime(product: Product): List<ProductPriceHistory>?
+interface ProductPriceHistoryJpaRepository: CrudRepository<ProductPriceHistoryEntity, Long>{
+    fun findByProductOrderByDatetime(productEntity: ProductEntity): List<ProductPriceHistoryEntity>?
 
-    fun findByProductAndDatetimeGreaterThanEqualOrderByDatetime(product: Product, datetime: LocalDateTime): List<ProductPriceHistory>?
+    fun findByProductAndDatetimeGreaterThanEqualOrderByDatetime(productEntity: ProductEntity, datetime: LocalDateTime): List<ProductPriceHistoryEntity>?
 
     @Query(nativeQuery = true, value = "SELECT * FROM product_price_history WHERE pid = :id ORDER BY datetime;")
-    fun findByProductIdOrderByDatetime(id: Long): List<ProductPriceHistory>?
+    fun findByProductIdOrderByDatetime(id: Long): List<ProductPriceHistoryEntity>?
 
     @Query(nativeQuery = true, value = "SELECT * FROM product_price_history WHERE pid = :id AND datetime >= :datetime ORDER BY datetime")
-    fun findByProductIdAndDatetimeGreaterThanEqualOrderByDatetime(id: Long, datetime: LocalDateTime): List<ProductPriceHistory>?
+    fun findByProductIdAndDatetimeGreaterThanEqualOrderByDatetime(id: Long, datetime: LocalDateTime): List<ProductPriceHistoryEntity>?
 }
 
 @Repository
@@ -64,16 +64,16 @@ class ProductPriceHistoryRepositoryImpl(
     private val productPriceHistoryJpaRepository: ProductPriceHistoryJpaRepository
 ): ProductPriceHistoryRepository {
 
-    override fun getPriceHistoryOfProduct(product: Product): List<ProductPriceHistoryDto>? {
-        return this.productPriceHistoryJpaRepository.findByProductOrderByDatetime(product)?.map { it.toProductPriceHistoryDto() }
+    override fun getPriceHistoryOfProduct(productEntity: ProductEntity): List<ProductPriceHistoryDto>? {
+        return this.productPriceHistoryJpaRepository.findByProductOrderByDatetime(productEntity)?.map { it.toProductPriceHistoryDto() }
     }
 
     override fun getPriceHistoryOfProduct(productId: Long): List<ProductPriceHistoryDto>? {
         return this.productPriceHistoryJpaRepository.findByProductIdOrderByDatetime(productId)?.map { it.toProductPriceHistoryDto() }
     }
 
-    override fun getPriceHistoryOfProduct(product: Product, datetime: LocalDateTime): List<ProductPriceHistoryDto>? {
-        return this.productPriceHistoryJpaRepository.findByProductAndDatetimeGreaterThanEqualOrderByDatetime(product, datetime)
+    override fun getPriceHistoryOfProduct(productEntity: ProductEntity, datetime: LocalDateTime): List<ProductPriceHistoryDto>? {
+        return this.productPriceHistoryJpaRepository.findByProductAndDatetimeGreaterThanEqualOrderByDatetime(productEntity, datetime)
             ?.map { it.toProductPriceHistoryDto() }
     }
 
