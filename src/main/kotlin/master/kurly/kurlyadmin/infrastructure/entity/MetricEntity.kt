@@ -1,8 +1,8 @@
 package master.kurly.kurlyadmin.infrastructure.entity
 
 import master.kurly.kurlyadmin.domain.metric.*
-import master.kurly.kurlyadmin.infrastructure.controller.MetricCreateDto
 import org.springframework.data.repository.CrudRepository
+import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import javax.persistence.*
 
@@ -14,7 +14,7 @@ class MetricEntity (
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long? = null,
 
-    @Column(name = "nickname", nullable = false, length = 100)
+    @Column(name = "nickname", nullable = false, length = 100, unique = true)
     var nickname: String = "",
 
     @Column(name = "name", nullable = false, length = 100)
@@ -96,4 +96,6 @@ class MetricEntity (
 }
 
 @Repository
-interface MetricEntityRepository: CrudRepository<MetricEntity, Long>
+interface MetricEntityRepository: CrudRepository<MetricEntity, Long>{
+    fun findAllByIsAvailable(isAvailable: Boolean): List<MetricEntity>
+}

@@ -3,6 +3,7 @@ package master.kurly.kurlyadmin.application
 import master.kurly.kurlyadmin.domain.metric.Metric
 import master.kurly.kurlyadmin.domain.subscriber.Subscriber
 import master.kurly.kurlyadmin.domain.subscriber.SubscriberRepository
+import master.kurly.kurlyadmin.infrastructure.controller.CreateSubscriberDto
 import org.springframework.stereotype.Service
 
 @Service
@@ -23,8 +24,15 @@ class SubscriberService(
             ?.let { this.subscriberRepository.getMetricsOfSubscriber(it) }
     }
 
-    fun createSubscriber(subscriber: Subscriber): Boolean {
-        return this.subscriberRepository.createSubscriber(subscriber)
+    fun createSubscriber(subscriberInfo: CreateSubscriberDto): Boolean {
+        Subscriber(
+            id = -1,
+            name = subscriberInfo.name,
+            subscribeType = subscriberInfo.type,
+            uri = subscriberInfo.uri
+        ).let {
+            return this.subscriberRepository.createSubscriber(it)
+        }
     }
 
     fun deleteSubscriberById(subscriberId: Long): Boolean {

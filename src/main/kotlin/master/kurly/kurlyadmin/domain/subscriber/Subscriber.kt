@@ -7,8 +7,6 @@ enum class SubscribeType{
 data class Subscriber(
     val id: Long,
     val subscribeType: SubscribeType,
-    val uri: String
-){
-    // name 은 고유키
-    val name = "${this.subscribeType.name}.${this.uri}"
-}
+    val uri: String,
+    val name: String
+)

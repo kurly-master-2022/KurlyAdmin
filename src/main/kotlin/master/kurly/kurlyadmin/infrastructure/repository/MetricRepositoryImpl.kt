@@ -4,6 +4,7 @@ import master.kurly.kurlyadmin.domain.metric.Metric
 import master.kurly.kurlyadmin.domain.metric.MetricHistory
 import master.kurly.kurlyadmin.domain.metric.MetricRepository
 import master.kurly.kurlyadmin.domain.product.Product
+import master.kurly.kurlyadmin.domain.product.ProductMetricImportance
 import master.kurly.kurlyadmin.domain.subscriber.Subscriber
 import master.kurly.kurlyadmin.infrastructure.api.MetricWorkflowApi
 import master.kurly.kurlyadmin.infrastructure.api.CloudWatchApi
@@ -31,6 +32,10 @@ class MetricRepositoryImpl(
 
     override fun getAllMetrics(): List<Metric> {
         return this.metricEntityRepository.findAll().map { it.toMetric() }
+    }
+
+    override fun getAvailableMetrics(): List<Metric> {
+        return this.metricEntityRepository.findAllByIsAvailable(true).map { it.toMetric() }
     }
 
     override fun getMetricById(id: Long): Metric? {
@@ -67,13 +72,13 @@ class MetricRepositoryImpl(
         return true
     }
 
-    override fun getProductsOfMetric(metric: Metric): List<Product> {
+    override fun getProductsOfMetric(metric: Metric): Map<Product, ProductMetricImportance> {
         return this.metricEntityRepository.findById(metric.id).orElse(null)
             ?.let { metricEntity ->
                 this.productMetricEntityRepository.findByMetricId(metricEntity.id!!)
-                    .map { it.productEntity!!.toProduct() }
+                    .associate { it.productEntity!!.toProduct() to it.preference }
             }
-            ?: listOf()
+            ?: mapOf()
     }
 
     override fun getSubscribersOfMetric(metric: Metric): List<Subscriber> {
@@ -86,37 +91,50 @@ class MetricRepositoryImpl(
     }
 
     @Transactional
-    override fun addSubscriberToMetric(metricId: Long, subscriberId: Long): Boolean {
+    override fun addSubscriberToMetric(metricId: Long, subscriberIds: List<Long>): Boolean {
         val metric = this.metricEntityRepository.findById(metricId).orElse(null)
-        val subscriber = this.subscriberEntityRepository.findById(subscriberId).orElse(null)
+        val subscribers = this.subscriberEntityRepository.findAllById(subscriberIds)
 
-        return if (metric != null && subscriber != null){
-            this.metricSubscriberEntityRepository.save(
-                MetricSubscriberEntity(null, metric, subscriber)
-            )
-            TODO("추가 request 보내서 성공하면 하도록 해야함 (transactional)")
-            true
-        }else{
-            this.logger.error("메트릭 id 와 구독자 id 에 해당하는 메트릭과 구독자를 찾지 못했습니다!")
-            false
+        if (metric == null){
+            this.logger.warn("주어진 metric id 에 해당하는 Metric 을 찾지 못했습니다. 작업을 실행하지 않습니다.")
+            return false
         }
+
+        if (subscribers.count() != subscriberIds.size){
+            this.logger.warn("주어진 구독자 id 들이 유효하지 않습니다. 작업을 실행하지 않습니다.")
+            return false
+        }
+
+        subscribers.forEach { subscriberEntity ->
+            if (this.metricSubscriberEntityRepository.findByMetricEntityAndSubscriberEntity(metric, subscriberEntity) == null){
+                MetricSubscriberEntity(null, metric, subscriberEntity)
+                    .let { this.metricSubscriberEntityRepository.save(it) }
+            }
+        }
+
+        return true
     }
 
     @Transactional
-    override fun removeSubscriberToMetric(metricId: Long, subscriberId: Long): Boolean {
-
+    override fun removeSubscriberToMetric(metricId: Long, subscriberIds: List<Long>): Boolean {
         val metric = this.metricEntityRepository.findById(metricId).orElse(null)
-        val subscriber = this.subscriberEntityRepository.findById(subscriberId).orElse(null)
+        val subscribers = this.subscriberEntityRepository.findAllById(subscriberIds)
 
-        return if (metric != null && subscriber != null){
-            this.metricSubscriberEntityRepository.findByMetricEntityAndSubscriberEntity(metric, subscriber)
-                ?.let { this.metricSubscriberEntityRepository.delete(it) }
-            TODO("제거 request 보내서 성공하면 하도록 해야함 (transactional)")
-            true
-        }else{
-            this.logger.error("메트릭 id 와 구독자 id 에 해당하는 메트릭과 구독자를 찾지 못했습니다!")
-            false
+        if (metric == null){
+            this.logger.warn("주어진 metric id 에 해당하는 Metric 을 찾지 못했습니다. 작업을 실행하지 않습니다.")
+            return false
         }
+
+        if (subscribers.count() != subscriberIds.size){
+            this.logger.warn("주어진 구독자 id 들이 유효하지 않습니다. 작업을 실행하지 않습니다.")
+            return false
+        }
+
+        subscribers
+            .mapNotNull { this.metricSubscriberEntityRepository.findByMetricEntityAndSubscriberEntity(metric, it) }
+            .let { this.metricSubscriberEntityRepository.deleteAll(it) }
+
+        return true
     }
 
     override fun isMetricAlarmTriggered(metric: Metric): Boolean {

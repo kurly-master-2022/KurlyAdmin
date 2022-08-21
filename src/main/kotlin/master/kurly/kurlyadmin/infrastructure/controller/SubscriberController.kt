@@ -32,9 +32,9 @@ class SubscriberController(
 
     @PostMapping("/create")
     fun createSubscriber(
-        @RequestBody subscriber: Subscriber
+        @RequestBody subscriberInfo: CreateSubscriberDto
     ): Boolean {
-        return this.subscriberService.createSubscriber(subscriber)
+        return this.subscriberService.createSubscriber(subscriberInfo)
     }
 
     @DeleteMapping("/delete")

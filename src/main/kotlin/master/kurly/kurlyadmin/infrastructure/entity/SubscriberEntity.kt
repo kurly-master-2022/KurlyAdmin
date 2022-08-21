@@ -14,7 +14,7 @@ class SubscriberEntity(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
 
-    @Column(name = "name", nullable = false)
+    @Column(name = "name", nullable = false, unique = true)
     val name: String = "",
 
     @Column(name = "type", nullable = false)
@@ -31,6 +31,7 @@ class SubscriberEntity(
         return Subscriber(
             id = this.id!!,
             subscribeType = this.subscribeType,
+            name = this.name,
             uri = this.uri
         )
     }
@@ -39,6 +40,15 @@ class SubscriberEntity(
         fun fromSubscriber(subscriber: Subscriber): SubscriberEntity{
             return SubscriberEntity(
                 id = subscriber.id,
+                name = subscriber.name,
+                subscribeType = subscriber.subscribeType,
+                uri = subscriber.uri
+            )
+        }
+
+        fun newSubscriber(subscriber: Subscriber): SubscriberEntity{
+            return SubscriberEntity(
+                id = null,
                 name = subscriber.name,
                 subscribeType = subscriber.subscribeType,
                 uri = subscriber.uri

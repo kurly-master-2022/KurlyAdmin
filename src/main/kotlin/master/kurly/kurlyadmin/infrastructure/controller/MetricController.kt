@@ -3,7 +3,6 @@ package master.kurly.kurlyadmin.infrastructure.controller
 import master.kurly.kurlyadmin.application.MetricService
 import master.kurly.kurlyadmin.domain.metric.Metric
 import master.kurly.kurlyadmin.domain.metric.MetricHistory
-import master.kurly.kurlyadmin.domain.product.Product
 import master.kurly.kurlyadmin.domain.subscriber.Subscriber
 import org.springframework.web.bind.annotation.*
 
@@ -16,6 +15,11 @@ class MetricController(
     @GetMapping("/all")
     fun getAllMetrics(): List<Metric> {
         return this.metricService.getAllMetrics()
+    }
+
+    @GetMapping("/available")
+    fun getAvailableMetrics(): List<Metric> {
+        return this.metricService.getAvailableMetrics()
     }
 
     @GetMapping("/id")
@@ -44,8 +48,9 @@ class MetricController(
     @GetMapping("/products")
     fun getProductsOfMetric(
         @RequestParam("id") id: Long
-    ): List<Product>? {
+    ): List<MetricMappingProductsDto>? {
         return this.metricService.getProductsOfMetric(id)
+            ?.map { MetricMappingProductsDto(it.key, it.value) }
     }
 
     @PostMapping("/create")
@@ -67,7 +72,7 @@ class MetricController(
         @RequestBody metricSubscriberDto: MetricSubscriberDto
     ): Boolean {
         return this.metricService.addSubscriberToMetric(
-            metricSubscriberDto.metricId, metricSubscriberDto.subscriberId
+            metricSubscriberDto.metricId, metricSubscriberDto.subscriberIds
         )
     }
 
@@ -76,7 +81,7 @@ class MetricController(
         @RequestBody metricSubscriberDto: MetricSubscriberDto
     ): Boolean {
         return this.metricService.removeSubscriberToMetric(
-            metricSubscriberDto.metricId, metricSubscriberDto.subscriberId
+            metricSubscriberDto.metricId, metricSubscriberDto.subscriberIds
         )
     }
 }

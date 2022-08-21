@@ -1,5 +1,7 @@
 package master.kurly.kurlyadmin.infrastructure.entity
 
+import org.springframework.data.repository.CrudRepository
+import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 import javax.persistence.*
 
@@ -21,3 +23,13 @@ class ProductPriceHistoryEntity (
     @Column(name = "price", nullable = false)
     var price: Int = 0
 )
+
+@Repository
+interface ProductPriceHistoryEntityRepository: CrudRepository<ProductPriceHistoryEntity, Long>{
+
+    fun findByProductEntityAndDatetimeGreaterThanEqualAndDatetimeLessThanEqual(
+        productEntity: ProductEntity,
+        datetime: LocalDateTime,
+        datetime2: LocalDateTime
+    ): List<ProductPriceHistoryEntity>
+}

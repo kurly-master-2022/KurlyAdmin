@@ -1,6 +1,6 @@
 package master.kurly.kurlyadmin.domain.product
 
-import master.kurly.kurlyadmin.domain.metric.Metric
+import java.time.LocalDateTime
 
 
 enum class ProductMetricImportance {
@@ -27,5 +27,17 @@ data class Product(
             link = this.link,
             thumbnail = this.thumbnail
         )
+    }
+}
+
+data class ProductHistory(
+    val product: Product,
+    val datetime: List<LocalDateTime>,
+    val values: List<Int>
+){
+    init {
+        if (datetime.size != values.size){
+            throw IllegalStateException("메트릭 과거값의 형식이 올바르지 않습니다. datetime 과 values 의 배열 크기가 다릅니다.")
+        }
     }
 }

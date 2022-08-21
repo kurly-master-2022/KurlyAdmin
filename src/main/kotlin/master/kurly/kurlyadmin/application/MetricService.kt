@@ -4,11 +4,11 @@ import master.kurly.kurlyadmin.domain.metric.Metric
 import master.kurly.kurlyadmin.domain.metric.MetricHistory
 import master.kurly.kurlyadmin.domain.metric.MetricRepository
 import master.kurly.kurlyadmin.domain.product.Product
+import master.kurly.kurlyadmin.domain.product.ProductMetricImportance
 import master.kurly.kurlyadmin.domain.subscriber.Subscriber
 import master.kurly.kurlyadmin.infrastructure.controller.MetricCreateDto
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
-import javax.transaction.Transactional
 
 @Service
 class MetricService(
@@ -17,6 +17,10 @@ class MetricService(
 
     fun getAllMetrics(): List<Metric> {
         return this.metricRepository.getAllMetrics()
+    }
+
+    fun getAvailableMetrics(): List<Metric>{
+        return this.metricRepository.getAvailableMetrics()
     }
 
     fun getMetricById(id: Long): Metric? {
@@ -38,7 +42,7 @@ class MetricService(
         }
     }
 
-    fun getProductsOfMetric(id: Long): List<Product>? {
+    fun getProductsOfMetric(id: Long): Map<Product, ProductMetricImportance>? {
         return this.getMetricById(id)?.let { metric ->
             this.metricRepository.getProductsOfMetric(metric)
         }
@@ -67,11 +71,11 @@ class MetricService(
         return this.metricRepository.deleteMetric(metricId)
     }
 
-    fun addSubscriberToMetric(metricId: Long, subscriberId: Long): Boolean {
-        return this.metricRepository.addSubscriberToMetric(metricId, subscriberId)
+    fun addSubscriberToMetric(metricId: Long, subscriberIds: List<Long>): Boolean {
+        return this.metricRepository.addSubscriberToMetric(metricId, subscriberIds)
     }
 
-    fun removeSubscriberToMetric(metricId: Long, subscriberId: Long): Boolean {
-        return this.metricRepository.removeSubscriberToMetric(metricId, subscriberId)
+    fun removeSubscriberToMetric(metricId: Long, subscriberIds: List<Long>): Boolean {
+        return this.metricRepository.removeSubscriberToMetric(metricId, subscriberIds)
     }
 }

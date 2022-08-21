@@ -1,11 +1,11 @@
 package master.kurly.kurlyadmin.infrastructure.controller
 
 import master.kurly.kurlyadmin.application.ProductService
-import master.kurly.kurlyadmin.domain.metric.Metric
 import master.kurly.kurlyadmin.domain.product.Product
-import master.kurly.kurlyadmin.domain.product.ProductMetricImportance
+import master.kurly.kurlyadmin.domain.product.ProductHistory
 import org.slf4j.LoggerFactory
 import org.springframework.web.bind.annotation.*
+import java.time.LocalDateTime
 
 @RestController
 @RequestMapping("/product")
@@ -26,7 +26,7 @@ class ProductController(
         return this.productService.getProductById(id)
     }
 
-    @GetMapping("/metrics")
+    @GetMapping("/metric")
     fun getMetricsById(
         @RequestParam("id") id: Long
     ): List<ProductMappingMetricsDto>? {
@@ -36,21 +36,21 @@ class ProductController(
 
     @PostMapping("/metric")
     fun addMetricToProduct(
-        @RequestBody productMetricDto: ProductMetricDto
+        @RequestBody productMetricDto: ProductMetricsDto
     ): Boolean {
         println(productMetricDto)
         return this.productService.addMetricToProduct(
-            productMetricDto.productId, productMetricDto.metricId
+            productMetricDto.productId, productMetricDto.metricIds
         )
     }
 
     @DeleteMapping("/metric")
     fun deleteMetricToProduct(
-        @RequestBody productMetricDto: ProductMetricDto
+        @RequestBody productMetricDto: ProductMetricsDto
     ): Boolean {
         println(productMetricDto)
         return this.productService.removeMetricToProduct(
-            productMetricDto.productId, productMetricDto.metricId
+            productMetricDto.productId, productMetricDto.metricIds
         )
     }
 
@@ -77,10 +77,11 @@ class ProductController(
     @GetMapping("/price_history")
     fun getPriceHistory(
         @RequestParam("id") id: Long,
-        @RequestParam("datetime") datetime: String?
-    ){
-        TODO("구현해야함")
+        @RequestParam("start") startDatetimeString: String?,
+        @RequestParam("end") endDatetimeString: String?
+    ): ProductHistory? {
+        val startDatetime = LocalDateTime.parse(startDatetimeString)
+        val endDatetime = LocalDateTime.parse(endDatetimeString)
+        return this.productService.getProductHistoryPrice(id, startDatetime, endDatetime)
     }
-
-
 }

@@ -22,7 +22,7 @@ class SubscriberRepositoryImpl(
     }
 
     override fun createSubscriber(subscriber: Subscriber): Boolean {
-        SubscriberEntity.fromSubscriber(subscriber)
+        SubscriberEntity.newSubscriber(subscriber)
             .let { this.subscriberEntityRepository.save(it) }
         return true
     }
