@@ -47,14 +47,8 @@ class MetricRepositoryImpl(
         this.metricEntityRepository.save(
             MetricEntity.fromMetric(metric).apply { this.id = null }
         )
-        this.metricWorkflowApi.postRequest("test", "testBody").let {
-            if (it.statusCode() != HttpStatus.OK.value()) {
-                throw Error(
-                    "메트릭 워크플로우를 만드는 데 실패했습니다!",
-                    HttpServerErrorException(HttpStatus.valueOf(it.statusCode()))
-                )
-            }
-        }
+        this.metricWorkflowApi.putMetricRequest(metric)
+            .let{ if(!it) throw Error("메트릭 워크플로우 생성에 실패했습니다! 메트릭 생성 전체를 rollback 합니다.") }
         return true
     }
 
@@ -62,10 +56,19 @@ class MetricRepositoryImpl(
     override fun deleteMetric(id: Long): Boolean {
         this.metricEntityRepository.findById(id).orElse(null)
             ?.also { metricEntity ->
+                // delete mapping of product
                 this.productMetricEntityRepository.findByMetricId(id)
                     .let { this.productMetricEntityRepository.deleteAll(it) }
+
+                // delete mapping of subscriber
                 this.metricSubscriberEntityRepository.findByMetricId(id)
                     .let { this.metricSubscriberEntityRepository.deleteAll(it) }
+
+                // delete workflow
+                this.metricWorkflowApi.deleteMetricWorkflow(metricEntity.toMetric())
+                    .let { if(!it) throw Error("메트릭 워크플로우 삭제에 실패했습니다! 메트릭 삭제 전체를 rollback 합니다.") }
+
+                // delete Metric from DB
                 this.metricEntityRepository.delete(metricEntity)
             }
             ?: run { this.logger.error("메트릭 id 에 해당하는 메트릭이 존재하지 않습니다!") }
@@ -138,7 +141,6 @@ class MetricRepositoryImpl(
     }
 
     override fun isMetricAlarmTriggered(metric: Metric): Boolean {
-        this.metricWorkflowApi.getRequest("isAlarmAvailable", mapOf("metricId" to metric.id.toString()))
         TODO()
     }
 

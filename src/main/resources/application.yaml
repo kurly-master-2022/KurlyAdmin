@@ -6,7 +6,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
     show-sql: false
 
 custom-variable:
@@ -14,3 +14,5 @@ custom-variable:
     cloudwatch:
       namespace: "Custom Metric Demo"
   make-initial-data: false
+  metric-workflow:
+    url: ${PUT_METRIC_WORKFLOW_URL_HERE}

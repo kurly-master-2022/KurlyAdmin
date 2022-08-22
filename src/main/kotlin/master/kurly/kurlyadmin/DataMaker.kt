@@ -61,8 +61,8 @@ class DataMaker(
     }
 
     private fun makeSubscriberData(){
-        val s1 = SubscriberEntity(null, "${SubscribeType.EMAIL.name}.test@test.com", SubscribeType.EMAIL, "test@test.com")
-        val s2 = SubscriberEntity(null, "${SubscribeType.SMS.name}.010-1234-5678", SubscribeType.SMS, "010-1234-5678")
+        val s1 = SubscriberEntity(null, "tester-email", SubscribeType.EMAIL, "test@test.com")
+        val s2 = SubscriberEntity(null, "tester-phone", SubscribeType.SMS, "010-1234-5678")
         this.subscriberEntityRepository.saveAll(listOf(s1, s2))
     }
 
