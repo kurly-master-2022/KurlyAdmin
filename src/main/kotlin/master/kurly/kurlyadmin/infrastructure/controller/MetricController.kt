@@ -4,6 +4,7 @@ import master.kurly.kurlyadmin.application.MetricService
 import master.kurly.kurlyadmin.domain.metric.Metric
 import master.kurly.kurlyadmin.domain.metric.MetricHistory
 import master.kurly.kurlyadmin.domain.subscriber.Subscriber
+import org.slf4j.LoggerFactory
 import org.springframework.web.bind.annotation.*
 
 @RestController
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.*
 class MetricController(
     private val metricService: MetricService
 ) {
+    private val logger = LoggerFactory.getLogger(this::class.java)
 
     @GetMapping("/all")
     fun getAllMetrics(): List<Metric> {
@@ -57,14 +59,24 @@ class MetricController(
     fun createMetric(
         @RequestBody metricCreateDto: MetricCreateDto
     ): Boolean {
-        return this.metricService.createMetric(metricCreateDto)
+        return runCatching {
+            this.metricService.createMetric(metricCreateDto)
+            true
+        }.onFailure { err ->
+            this.logger.error("에러 발생! : $err")
+        }.getOrDefault(false)
     }
 
     @DeleteMapping("/delete")
     fun deleteMetricById(
         @RequestParam("id") id: Long
     ): Boolean {
-        return this.metricService.deleteMetricById(id)
+        return runCatching {
+            this.metricService.deleteMetricById(id)
+            true
+        }.onFailure { err ->
+            this.logger.error("에러 발생! : $err")
+        }.getOrDefault(false)
     }
 
     @PostMapping("/subscriber")
@@ -83,5 +95,12 @@ class MetricController(
         return this.metricService.removeSubscriberToMetric(
             metricSubscriberDto.metricId, metricSubscriberDto.subscriberIds
         )
+    }
+
+    @PostMapping("/activate")
+    fun activeMetricWorkflowById(
+        @RequestParam("id") id: Long
+    ): Boolean {
+        return this.metricService.activateMetricWorkflow(id)
     }
 }

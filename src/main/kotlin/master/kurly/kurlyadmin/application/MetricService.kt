@@ -1,18 +1,19 @@
 package master.kurly.kurlyadmin.application
 
-import master.kurly.kurlyadmin.domain.metric.Metric
-import master.kurly.kurlyadmin.domain.metric.MetricHistory
-import master.kurly.kurlyadmin.domain.metric.MetricRepository
+import master.kurly.kurlyadmin.domain.metric.*
 import master.kurly.kurlyadmin.domain.product.Product
 import master.kurly.kurlyadmin.domain.product.ProductMetricImportance
 import master.kurly.kurlyadmin.domain.subscriber.Subscriber
 import master.kurly.kurlyadmin.infrastructure.controller.MetricCreateDto
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
+import javax.transaction.Transactional
 
 @Service
 class MetricService(
-    private val metricRepository: MetricRepository
+    private val metricRepository: MetricRepository,
+    private val metricValueRepository: MetricValueRepository,
+    private val metricWorkflowManager: MetricWorkflowManager,
 ) {
 
     fun getAllMetrics(): List<Metric> {
@@ -32,7 +33,7 @@ class MetricService(
         val endDatetime = LocalDateTime.parse(endString)
 
         return this.getMetricById(id)?.let { metric ->
-            this.metricRepository.getMetricValueHistory(metric, startDatetime, endDatetime)
+            this.metricValueRepository.getMetricValueHistory(metric, startDatetime, endDatetime)
         }
     }
 
@@ -48,7 +49,8 @@ class MetricService(
         }
     }
 
-    fun createMetric(metricCreateDto: MetricCreateDto): Boolean {
+    @Transactional
+    fun createMetric(metricCreateDto: MetricCreateDto) {
         return Metric(
             id = 0,
             nickname = metricCreateDto.nickname,
@@ -61,14 +63,25 @@ class MetricService(
             threshold = metricCreateDto.alarmThreshold,
             thresholdDirection = metricCreateDto.alarmComparator,
             description = metricCreateDto.description,
-            isAvailable = false
-        ).let {
-            this.metricRepository.createMetric(it)
+            isAvailable = !metricCreateDto.scheduled
+        ).let { metric ->
+            this.metricRepository.createMetric(metric)
+            this.metricWorkflowManager.createMetricWorkflow(metric)
+                .let { if(!it) throw Error("메트릭 워크플로우 생성 실패!") }
+            this.metricWorkflowManager.registerMetricWorkflowJob(metric)
+                .let { if(!it) throw Error("메트릭 워크플로우 일감 생성 실패!") }
         }
     }
 
-    fun deleteMetricById(metricId: Long): Boolean {
-        return this.metricRepository.deleteMetric(metricId)
+    @Transactional
+    fun deleteMetricById(metricId: Long) {
+        return this.metricRepository.getMetricById(metricId)
+            ?.let { metric ->
+                this.metricRepository.deleteMetric(metricId)
+                this.metricWorkflowManager.deleteMetricWorkflow(metric)
+                    .let { if(!it) throw Error("메트릭 워크플로우 삭제 실패!") }
+            }
+            ?: run {throw Error("메트릭 조회 실패!") }
     }
 
     fun addSubscriberToMetric(metricId: Long, subscriberIds: List<Long>): Boolean {
@@ -77,5 +90,12 @@ class MetricService(
 
     fun removeSubscriberToMetric(metricId: Long, subscriberIds: List<Long>): Boolean {
         return this.metricRepository.removeSubscriberToMetric(metricId, subscriberIds)
+    }
+
+
+    fun activateMetricWorkflow(metricId: Long): Boolean{
+        return this.metricRepository.getMetricById(metricId)
+            ?.let { metric -> this.metricWorkflowManager.activateMetricWorkflow(metric) }
+            ?: false
     }
 }

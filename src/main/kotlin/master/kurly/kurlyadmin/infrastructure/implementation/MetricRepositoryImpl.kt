@@ -1,4 +1,4 @@
-package master.kurly.kurlyadmin.infrastructure.repository
+package master.kurly.kurlyadmin.infrastructure.implementation
 
 import master.kurly.kurlyadmin.domain.metric.Metric
 import master.kurly.kurlyadmin.domain.metric.MetricHistory
@@ -6,13 +6,10 @@ import master.kurly.kurlyadmin.domain.metric.MetricRepository
 import master.kurly.kurlyadmin.domain.product.Product
 import master.kurly.kurlyadmin.domain.product.ProductMetricImportance
 import master.kurly.kurlyadmin.domain.subscriber.Subscriber
-import master.kurly.kurlyadmin.infrastructure.api.MetricWorkflowApi
 import master.kurly.kurlyadmin.infrastructure.api.CloudWatchApi
 import master.kurly.kurlyadmin.infrastructure.entity.*
 import org.slf4j.LoggerFactory
-import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Repository
-import org.springframework.web.client.HttpServerErrorException
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
@@ -23,12 +20,9 @@ class MetricRepositoryImpl(
     private val metricEntityRepository: MetricEntityRepository,
     private val subscriberEntityRepository: SubscriberEntityRepository,
     private val productMetricEntityRepository: ProductMetricEntityRepository,
-    private val metricSubscriberEntityRepository: MetricSubscriberEntityRepository,
-    private val metricWorkflowApi: MetricWorkflowApi,
-    private val cloudWatchApi: CloudWatchApi
+    private val metricSubscriberEntityRepository: MetricSubscriberEntityRepository
 ): MetricRepository {
     private val logger = LoggerFactory.getLogger(this::class.java)
-    private val seoulZone = ZoneId.of("Asia/Seoul")
 
     override fun getAllMetrics(): List<Metric> {
         return this.metricEntityRepository.findAll().map { it.toMetric() }
@@ -42,17 +36,13 @@ class MetricRepositoryImpl(
         return this.metricEntityRepository.findById(id).orElse(null)?.toMetric()
     }
 
-    @Transactional
     override fun createMetric(metric: Metric): Boolean {
         this.metricEntityRepository.save(
             MetricEntity.fromMetric(metric).apply { this.id = null }
         )
-        this.metricWorkflowApi.putMetricRequest(metric)
-            .let{ if(!it) throw Error("메트릭 워크플로우 생성에 실패했습니다! 메트릭 생성 전체를 rollback 합니다.") }
         return true
     }
 
-    @Transactional
     override fun deleteMetric(id: Long): Boolean {
         this.metricEntityRepository.findById(id).orElse(null)
             ?.also { metricEntity ->
@@ -63,10 +53,6 @@ class MetricRepositoryImpl(
                 // delete mapping of subscriber
                 this.metricSubscriberEntityRepository.findByMetricId(id)
                     .let { this.metricSubscriberEntityRepository.deleteAll(it) }
-
-                // delete workflow
-                this.metricWorkflowApi.deleteMetricWorkflow(metricEntity.toMetric())
-                    .let { if(!it) throw Error("메트릭 워크플로우 삭제에 실패했습니다! 메트릭 삭제 전체를 rollback 합니다.") }
 
                 // delete Metric from DB
                 this.metricEntityRepository.delete(metricEntity)
@@ -98,18 +84,22 @@ class MetricRepositoryImpl(
         val metric = this.metricEntityRepository.findById(metricId).orElse(null)
         val subscribers = this.subscriberEntityRepository.findAllById(subscriberIds)
 
-        if (metric == null){
+        if (metric == null) {
             this.logger.warn("주어진 metric id 에 해당하는 Metric 을 찾지 못했습니다. 작업을 실행하지 않습니다.")
             return false
         }
 
-        if (subscribers.count() != subscriberIds.size){
+        if (subscribers.count() != subscriberIds.size) {
             this.logger.warn("주어진 구독자 id 들이 유효하지 않습니다. 작업을 실행하지 않습니다.")
             return false
         }
 
         subscribers.forEach { subscriberEntity ->
-            if (this.metricSubscriberEntityRepository.findByMetricEntityAndSubscriberEntity(metric, subscriberEntity) == null){
+            if (this.metricSubscriberEntityRepository.findByMetricEntityAndSubscriberEntity(
+                    metric,
+                    subscriberEntity
+                ) == null
+            ) {
                 MetricSubscriberEntity(null, metric, subscriberEntity)
                     .let { this.metricSubscriberEntityRepository.save(it) }
             }
@@ -123,12 +113,12 @@ class MetricRepositoryImpl(
         val metric = this.metricEntityRepository.findById(metricId).orElse(null)
         val subscribers = this.subscriberEntityRepository.findAllById(subscriberIds)
 
-        if (metric == null){
+        if (metric == null) {
             this.logger.warn("주어진 metric id 에 해당하는 Metric 을 찾지 못했습니다. 작업을 실행하지 않습니다.")
             return false
         }
 
-        if (subscribers.count() != subscriberIds.size){
+        if (subscribers.count() != subscriberIds.size) {
             this.logger.warn("주어진 구독자 id 들이 유효하지 않습니다. 작업을 실행하지 않습니다.")
             return false
         }
@@ -140,15 +130,4 @@ class MetricRepositoryImpl(
         return true
     }
 
-    override fun isMetricAlarmTriggered(metric: Metric): Boolean {
-        TODO()
-    }
-
-    override fun getMetricValueHistory(metric: Metric, startAt: LocalDateTime, endAt: LocalDateTime): MetricHistory? {
-        return this.cloudWatchApi.getMetricData(
-            metric,
-            ZonedDateTime.of(startAt, seoulZone),
-            ZonedDateTime.of(endAt, seoulZone)
-        )
-    }
 }

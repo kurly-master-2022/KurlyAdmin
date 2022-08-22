@@ -1,4 +1,4 @@
-package master.kurly.kurlyadmin.infrastructure.repository
+package master.kurly.kurlyadmin.infrastructure.implementation
 
 import master.kurly.kurlyadmin.domain.metric.Metric
 import master.kurly.kurlyadmin.domain.product.Product

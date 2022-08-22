@@ -1,8 +1,8 @@
 spring:
   datasource:
-    username: ${PUT_USERNAME_HERE}
-    password: ${PUT_PASSWORD_HERE}
-    url: ${PUT_URL_HERE}
+    username: ${PUT_DB_USERNAME_HERE}
+    password: ${PUT_DB_PASSWORD_HERE}
+    url: ${PUT_DB_URL_HERE}
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
@@ -16,3 +16,6 @@ custom-variable:
   make-initial-data: false
   metric-workflow:
     url: ${PUT_METRIC_WORKFLOW_URL_HERE}
+  github:
+    token: ${PUT_GITHUB_TOKEN_HERE}
+    project-id: ${PUT_GITHUB_ORGANIZATION_PROJECT_ID_HERE}
