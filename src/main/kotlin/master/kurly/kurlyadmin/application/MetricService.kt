@@ -51,7 +51,7 @@ class MetricService(
 
     @Transactional
     fun createMetric(metricCreateDto: MetricCreateDto) {
-        return Metric(
+        val metric = Metric(
             id = 0,
             nickname = metricCreateDto.nickname,
             name = metricCreateDto.name,
@@ -64,13 +64,13 @@ class MetricService(
             thresholdDirection = metricCreateDto.alarmComparator,
             description = metricCreateDto.description,
             isAvailable = !metricCreateDto.scheduled
-        ).let { metric ->
-            this.metricRepository.createMetric(metric)
-            this.metricWorkflowManager.createMetricWorkflow(metric)
-                .let { if(!it) throw Error("메트릭 워크플로우 생성 실패!") }
-            this.metricWorkflowManager.registerMetricWorkflowJob(metric)
-                .let { if(!it) throw Error("메트릭 워크플로우 일감 생성 실패!") }
-        }
+        )
+        this.metricRepository.createMetric(metric)
+        this.metricWorkflowManager.createMetricWorkflow(metric)
+            .let { if(!it) throw RuntimeException("메트릭 워크플로우 생성 실패!") }
+        this.metricWorkflowManager.registerMetricWorkflowJob(metric)
+            .let { if(!it) throw RuntimeException("메트릭 워크플로우 일감 생성 실패!") }
+
     }
 
     @Transactional
@@ -79,9 +79,9 @@ class MetricService(
             ?.let { metric ->
                 this.metricRepository.deleteMetric(metricId)
                 this.metricWorkflowManager.deleteMetricWorkflow(metric)
-                    .let { if(!it) throw Error("메트릭 워크플로우 삭제 실패!") }
+                    .let { if(!it) throw RuntimeException("메트릭 워크플로우 삭제 실패!") }
             }
-            ?: run {throw Error("메트릭 조회 실패!") }
+            ?: run {throw RuntimeException("메트릭 조회 실패!") }
     }
 
     fun addSubscriberToMetric(metricId: Long, subscriberIds: List<Long>): Boolean {

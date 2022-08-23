@@ -7,6 +7,11 @@ Globals:
   Function:
     Timeout: 480
 
+Parameters:
+  CertificateArn:
+    Type: String
+    Default: arn:aws:acm:ap-northeast-2:948605357278:certificate/f619212b-90ae-4491-8683-cc949467d76e
+
 Resources:
 
   KurlyAdminApplication:
@@ -27,12 +32,24 @@ Resources:
       ApplicationName: !Ref KurlyAdminApplication
       SolutionStackName: 64bit Amazon Linux 2 v3.3.1 running Corretto 11
       OptionSettings:
+        - Namespace: aws:elasticbeanstalk:environment
+          OptionName: LoadBalancerType
+          Value: application
+        - Namespace: aws:elbv2:listener:443
+          OptionName: DefaultProcess
+          Value: default
+        - Namespace: aws:elbv2:listener:443
+          OptionName: Protocol
+          Value: HTTPS
+        - Namespace: aws:elbv2:listener:443
+          OptionName: SSLCertificateArns
+          Value: !Ref CertificateArn
         - Namespace: aws:autoscaling:launchconfiguration
           OptionName: IamInstanceProfile
           Value: !Ref KurlyAdminInstanceRole
-        - Namespace: aws:elasticbeanstalk:environment
-          OptionName: EnvironmentType
-          Value: SingleInstance
+        - Namespace: aws:autoscaling:updatepolicy:rollingupdate
+          OptionName: RollingUpdateEnabled
+          Value: true
 
   KurlyAdminEnv:
     Type: AWS::ElasticBeanstalk::Environment
@@ -60,8 +77,6 @@ Resources:
         - arn:aws:iam::aws:policy/AWSElasticBeanstalkMulticontainerDocker
         - arn:aws:iam::aws:policy/CloudWatchFullAccess
         - arn:aws:iam::aws:policy/CloudWatchEventsFullAccess
-        - arn:aws:iam::aws:policy/AmazonSNSFullAccess
-        - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
 
   KurlyAdminInstanceRole:
     Type: AWS::IAM::InstanceProfile
@@ -69,9 +84,26 @@ Resources:
       Roles:
         - !Ref KurlyAdminRole
 
+  KurlyAdminDNS:
+    Type: AWS::Route53::RecordSetGroup
+    Properties:
+      HostedZoneName: metrichosu.net.
+      Comment: Zone apex alias targeted to ALB of MetricHosu REST API
+      RecordSets:
+        - Name: backend.metrichosu.net.
+          Type: CNAME
+          TTL: 900
+          ResourceRecords:
+            - !GetAtt KurlyAdminEnv.EndpointURL
+
 Outputs:
   KurlyAdminAddress:
     Description: "Kurly Admin REST API Address"
-    Value: !Sub
-      - 'http://${EndpointURL}'
-      - EndpointURL: !GetAtt KurlyAdminEnv.EndpointURL
+    Value: !Join
+      - ", "
+      - - !Sub
+          - 'http://${EndpointURL}'
+          - EndpointURL: !GetAtt KurlyAdminEnv.EndpointURL
+        - !Sub
+          - 'https://${EndpointURL}'
+          - EndpointURL: !GetAtt KurlyAdminEnv.EndpointURL

@@ -8,4 +8,5 @@ s3_prefix = "kurlyadmin"
 region = "ap-northeast-2"
 profile = "kurly"
 capabilities = "CAPABILITY_IAM"
+parameter_overrides = "CertificateArn=\"arn:aws:acm:ap-northeast-2:948605357278:certificate/f619212b-90ae-4491-8683-cc949467d76e\""
 image_repositories = []

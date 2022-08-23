@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
+import java.net.http.HttpRequest.BodyPublishers
 import java.net.http.HttpResponse
 
 @Component
@@ -31,8 +32,8 @@ class MetricWorkflowApi(
             .header("content-type", "application/json")
             .PUT(HttpRequest.BodyPublishers.ofString(requestString))
             .build()
-
         val requestResult = this.httpClient.send(makeRequest, HttpResponse.BodyHandlers.ofString())
+
         return when(val responseCode = HttpStatus.valueOf(requestResult.statusCode())){
             HttpStatus.OK -> {
                 this.logger.info("Metric $metric 의 워크플로 생성이 완료되었습니다!")
@@ -57,6 +58,7 @@ class MetricWorkflowApi(
     fun deleteMetricWorkflow(metric: Metric): Boolean {
         val deleteRequest = HttpRequest.newBuilder()
             .uri(URI.create("$url/workflow/${metric.nickname}"))
+            .DELETE()
             .build()
 
         val requestResult = this.httpClient.send(deleteRequest, HttpResponse.BodyHandlers.ofString())
@@ -79,6 +81,7 @@ class MetricWorkflowApi(
     fun activateMetricWorkflow(metric: Metric): Boolean {
         val postRequest = HttpRequest.newBuilder()
             .uri(URI.create("$url/workflow/trigger/${metric.nickname}"))
+            .POST(BodyPublishers.ofString(""))
             .build()
 
         val requestResult = this.httpClient.send(postRequest, HttpResponse.BodyHandlers.ofString())
