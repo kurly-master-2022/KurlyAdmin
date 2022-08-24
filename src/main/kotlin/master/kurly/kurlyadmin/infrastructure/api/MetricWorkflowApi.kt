@@ -2,6 +2,7 @@ package master.kurly.kurlyadmin.infrastructure.api
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import master.kurly.kurlyadmin.domain.metric.Metric
+import master.kurly.kurlyadmin.domain.subscriber.Subscriber
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
@@ -80,8 +81,8 @@ class MetricWorkflowApi(
 
     fun activateMetricWorkflow(metric: Metric): Boolean {
         val postRequest = HttpRequest.newBuilder()
-            .uri(URI.create("$url/workflow/trigger/${metric.nickname}"))
-            .POST(BodyPublishers.ofString(""))
+            .uri(URI.create("$url/workflow/${metric.nickname}?enabled=true"))
+            .PUT(BodyPublishers.ofString(""))
             .build()
 
         val requestResult = this.httpClient.send(postRequest, HttpResponse.BodyHandlers.ofString())
@@ -102,6 +103,50 @@ class MetricWorkflowApi(
                 this.logger.error("Metric $metric 의 워크플로 활성화 중 알 수 없는 오류가 발생했습니다!")
                 false
             }
+        }
+    }
+
+
+    fun addSubscriber(subscriber: Subscriber, metrics: List<Metric>){
+        val newSubscriberDto = NewSubscriberDto(
+            subscriber.name,
+            protocol = subscriber.subscribeType.name,
+            destination = subscriber.uri,
+            metricIds = metrics.map { it.nickname }
+        ).let {
+            this.objectMapper.writeValueAsString(it)
+        }
+
+        val request = HttpRequest.newBuilder()
+            .uri(URI.create("$url/subscribers"))
+            .header("content-type", "application/json")
+            .PUT(BodyPublishers.ofString(newSubscriberDto))
+            .build()
+
+        val requestResult = this.httpClient.send(request, HttpResponse.BodyHandlers.ofString())
+
+        if (requestResult.statusCode() >= 300){
+            this.logger.error("구독자 추가 시 에러 발생! : ${requestResult.statusCode()}, ${requestResult.body()}")
+            throw RuntimeException("Workflow 에 구독자 추가시 에러 발생!")
+        }
+    }
+
+    fun deleteSubscriber(subscriber: Subscriber, arn: String){
+
+        println(subscriber.name)
+        println(subscriber.uri)
+
+        val request = HttpRequest.newBuilder()
+            .uri(URI.create("$url/subscribers?destination=${subscriber.uri}"))
+            .header("content-type", "text/plain")
+            .method("DELETE", BodyPublishers.ofString(arn))
+            .build()
+
+        val requestResult = this.httpClient.send(request, HttpResponse.BodyHandlers.ofString())
+
+        if (requestResult.statusCode() >= 300){
+            this.logger.error("구독자 삭제 시 에러 발생! : ${requestResult.statusCode()}, ${requestResult.body()}")
+            throw RuntimeException("Workflow 에 구독자 삭제시 에러 발생!")
         }
     }
 }

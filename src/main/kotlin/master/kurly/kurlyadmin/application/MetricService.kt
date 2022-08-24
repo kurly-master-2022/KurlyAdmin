@@ -69,7 +69,12 @@ class MetricService(
         this.metricWorkflowManager.createMetricWorkflow(metric)
             .let { if(!it) throw RuntimeException("메트릭 워크플로우 생성 실패!") }
         this.metricWorkflowManager.registerMetricWorkflowJob(metric)
-            .let { if(!it) throw RuntimeException("메트릭 워크플로우 일감 생성 실패!") }
+            .let {
+                if(!it) {
+                    this.metricWorkflowManager.deleteMetricWorkflow(metric)
+                    throw RuntimeException("메트릭 워크플로우 일감 생성 실패!")
+                }
+            }
 
     }
 
@@ -92,10 +97,14 @@ class MetricService(
         return this.metricRepository.removeSubscriberToMetric(metricId, subscriberIds)
     }
 
-
+    @Transactional
     fun activateMetricWorkflow(metricId: Long): Boolean{
-        return this.metricRepository.getMetricById(metricId)
-            ?.let { metric -> this.metricWorkflowManager.activateMetricWorkflow(metric) }
+        return this.metricRepository.getMetricById(metricId)?.activateMetric()
+            ?.let { metric ->
+                val activateResult = this.metricWorkflowManager.activateMetricWorkflow(metric)
+                if (activateResult){ this.metricRepository.modifyMetric(metric) }
+                true
+            }
             ?: false
     }
 }

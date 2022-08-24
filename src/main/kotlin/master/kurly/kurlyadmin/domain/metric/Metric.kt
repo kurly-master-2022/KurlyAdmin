@@ -41,6 +41,23 @@ data class Metric(
             throw IllegalArgumentException("주기 실행 작업인데 실행 cron 식이 주어지지 않았습니다.")
         }
     }
+
+    fun activateMetric(): Metric{
+        return Metric(
+            id = this.id,
+            name = this.name,
+            nickname = this.nickname,
+            source = this.source,
+            sourceType = this.sourceType,
+            isScheduled = this.isScheduled,
+            cronSchedule = this.cronSchedule,
+            s3ObjectKey = this.s3ObjectKey,
+            threshold = this.threshold,
+            thresholdDirection = this.thresholdDirection,
+            description = this.description,
+            isAvailable = true
+        )
+    }
 }
 
 data class MetricHistory(

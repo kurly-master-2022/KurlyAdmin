@@ -36,6 +36,16 @@ class MetricRepositoryImpl(
         return this.metricEntityRepository.findById(id).orElse(null)?.toMetric()
     }
 
+    override fun modifyMetric(metric: Metric): Boolean {
+        return this.metricEntityRepository.findById(metric.id).orElse(null)
+            ?.let {
+                it.update(metric)
+                this.metricEntityRepository.save(it)
+                true
+            }
+            ?: false
+    }
+
     override fun createMetric(metric: Metric): Boolean {
         this.metricEntityRepository.save(
             MetricEntity.fromMetric(metric).apply { this.id = null }

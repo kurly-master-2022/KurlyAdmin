@@ -5,6 +5,14 @@ import master.kurly.kurlyadmin.domain.metric.SourceType
 import master.kurly.kurlyadmin.domain.metric.ThresholdDirection
 import kotlin.math.roundToInt
 
+
+data class NewSubscriberDto(
+    val name: String, // 구독 수단의 이름
+    val protocol: String, // 구독 수단의 프로토콜 "EMAIL"
+    val destination: String, // 구독 메시지를 받을 곳
+    val metricIds: List<String>// 구독 대상인 메트릭들
+)
+
 data class CreateMetricRequestDto(
     val metricId: String,
     val metricName: String?, //default ""

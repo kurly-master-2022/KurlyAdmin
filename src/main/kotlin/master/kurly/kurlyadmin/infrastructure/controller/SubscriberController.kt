@@ -33,15 +33,16 @@ class SubscriberController(
     @PostMapping("/create")
     fun createSubscriber(
         @RequestBody subscriberInfo: CreateSubscriberDto
-    ): Boolean {
-        return this.subscriberService.createSubscriber(subscriberInfo)
+    ){
+        this.subscriberService.createSubscriber(subscriberInfo)
     }
 
     @DeleteMapping("/delete")
     fun deleteSubscriberById(
-        @RequestParam("id") id: Long
+        @RequestParam("id") id: Long,
+        @RequestBody arn: String
     ): Boolean {
-        return this.subscriberService.deleteSubscriberById(id)
+        return this.subscriberService.deleteSubscriberById(id, arn)
     }
 
 }

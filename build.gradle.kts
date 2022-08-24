@@ -9,7 +9,7 @@ plugins {
 }
 
 group = "master.kurly"
-version = "0.0.4"
+version = "1.0.0"
 java.sourceCompatibility = JavaVersion.VERSION_11
 val bootJar: BootJar by tasks
 

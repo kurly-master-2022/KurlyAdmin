@@ -1,8 +1,8 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  kurlyadmin
-  SAM Template for kurly-admin
+  kurly admin backend
+  SAM Template for kurly-admin-backend
 Globals:
   Function:
     Timeout: 480
@@ -14,22 +14,22 @@ Parameters:
 
 Resources:
 
-  KurlyAdminApplication:
+  KurlyAdminBackendApplication:
     Type: AWS::ElasticBeanstalk::Application
     Properties:
       Description: Kurly Admin Web Application
-      ApplicationName: kurly-admin
+      ApplicationName: kurly-admin-backend
 
-  KurlyAdminVersion:
+  KurlyAdminBackendVersion:
     Type: AWS::ElasticBeanstalk::ApplicationVersion
     Properties:
-      ApplicationName: !Ref KurlyAdminApplication
+      ApplicationName: !Ref KurlyAdminBackendApplication
       SourceBundle: ebpackage
 
-  KurlyAdminConfigurationTemplate:
+  KurlyAdminBackendConfigurationTemplate:
     Type: AWS::ElasticBeanstalk::ConfigurationTemplate
     Properties:
-      ApplicationName: !Ref KurlyAdminApplication
+      ApplicationName: !Ref KurlyAdminBackendApplication
       SolutionStackName: 64bit Amazon Linux 2 v3.3.1 running Corretto 11
       OptionSettings:
         - Namespace: aws:elasticbeanstalk:environment
@@ -46,20 +46,20 @@ Resources:
           Value: !Ref CertificateArn
         - Namespace: aws:autoscaling:launchconfiguration
           OptionName: IamInstanceProfile
-          Value: !Ref KurlyAdminInstanceRole
+          Value: !Ref KurlyAdminBackendInstanceRole
         - Namespace: aws:autoscaling:updatepolicy:rollingupdate
           OptionName: RollingUpdateEnabled
           Value: true
 
-  KurlyAdminEnv:
+  KurlyAdminBackendEnv:
     Type: AWS::ElasticBeanstalk::Environment
-    DependsOn: KurlyAdminVersion
+    DependsOn: KurlyAdminBackendVersion
     Properties:
-      ApplicationName: !Ref KurlyAdminApplication
-      TemplateName: !Ref KurlyAdminConfigurationTemplate
-      VersionLabel: !Ref KurlyAdminVersion
+      ApplicationName: !Ref KurlyAdminBackendApplication
+      TemplateName: !Ref KurlyAdminBackendConfigurationTemplate
+      VersionLabel: !Ref KurlyAdminBackendVersion
 
-  KurlyAdminRole:
+  KurlyAdminBackendRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -78,13 +78,13 @@ Resources:
         - arn:aws:iam::aws:policy/CloudWatchFullAccess
         - arn:aws:iam::aws:policy/CloudWatchEventsFullAccess
 
-  KurlyAdminInstanceRole:
+  KurlyAdminBackendInstanceRole:
     Type: AWS::IAM::InstanceProfile
     Properties:
       Roles:
-        - !Ref KurlyAdminRole
+        - !Ref KurlyAdminBackendRole
 
-  KurlyAdminDNS:
+  KurlyAdminBackendDNS:
     Type: AWS::Route53::RecordSetGroup
     Properties:
       HostedZoneName: metrichosu.net.
@@ -94,16 +94,16 @@ Resources:
           Type: CNAME
           TTL: 900
           ResourceRecords:
-            - !GetAtt KurlyAdminEnv.EndpointURL
+            - !GetAtt KurlyAdminBackendEnv.EndpointURL
 
 Outputs:
-  KurlyAdminAddress:
+  KurlyAdminBackendAddress:
     Description: "Kurly Admin REST API Address"
     Value: !Join
       - ", "
       - - !Sub
           - 'http://${EndpointURL}'
-          - EndpointURL: !GetAtt KurlyAdminEnv.EndpointURL
+          - EndpointURL: !GetAtt KurlyAdminBackendEnv.EndpointURL
         - !Sub
           - 'https://${EndpointURL}'
-          - EndpointURL: !GetAtt KurlyAdminEnv.EndpointURL
+          - EndpointURL: !GetAtt KurlyAdminBackendEnv.EndpointURL

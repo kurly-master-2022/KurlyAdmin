@@ -75,6 +75,21 @@ class MetricEntity (
         )
     }
 
+    fun update(metric: Metric) {
+        if (metric.id != this.id){ throw NoSuchElementException("다른 메트릭의 정보 변경을 시도합니다.") }
+        this.nickname = metric.nickname
+        this.name = metric.name
+        this.sourceType = metric.sourceType
+        this.source = metric.source
+        this.isScheduled = metric.isScheduled
+        this.schedule = metric.cronSchedule
+        this.s3ObjectKey = metric.s3ObjectKey
+        this.threshold = metric.threshold
+        this.thresholdDirection = metric.thresholdDirection
+        this.description = metric.description
+        this.isAvailable = metric.isAvailable
+    }
+
     companion object{
         fun fromMetric(metric: Metric): MetricEntity {
             return MetricEntity(

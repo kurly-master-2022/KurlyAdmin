@@ -9,6 +9,7 @@ interface MetricRepository {
     fun getAllMetrics(): List<Metric>
     fun getAvailableMetrics(): List<Metric>
     fun getMetricById(id: Long): Metric?
+    fun modifyMetric(metric: Metric): Boolean
     fun createMetric(metric: Metric): Boolean
     fun deleteMetric(id: Long): Boolean
 

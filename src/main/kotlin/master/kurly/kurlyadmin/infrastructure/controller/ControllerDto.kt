@@ -63,5 +63,6 @@ data class MetricMappingProductsDto(
 data class CreateSubscriberDto(
     val name: String,
     val type: SubscribeType,
-    val uri: String
+    val uri: String,
+    val metricIds: List<Long>
 )

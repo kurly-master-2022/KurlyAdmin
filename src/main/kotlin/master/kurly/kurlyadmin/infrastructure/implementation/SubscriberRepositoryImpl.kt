@@ -3,15 +3,15 @@ package master.kurly.kurlyadmin.infrastructure.implementation
 import master.kurly.kurlyadmin.domain.metric.Metric
 import master.kurly.kurlyadmin.domain.subscriber.Subscriber
 import master.kurly.kurlyadmin.domain.subscriber.SubscriberRepository
-import master.kurly.kurlyadmin.infrastructure.entity.MetricSubscriberEntityRepository
-import master.kurly.kurlyadmin.infrastructure.entity.SubscriberEntity
-import master.kurly.kurlyadmin.infrastructure.entity.SubscriberEntityRepository
+import master.kurly.kurlyadmin.infrastructure.controller.MetricSubscriberDto
+import master.kurly.kurlyadmin.infrastructure.entity.*
 import org.springframework.stereotype.Repository
 
 @Repository
 class SubscriberRepositoryImpl(
     private val subscriberEntityRepository: SubscriberEntityRepository,
-    private val metricSubscriberEntityRepository: MetricSubscriberEntityRepository
+    private val metricSubscriberEntityRepository: MetricSubscriberEntityRepository,
+    private val metricEntityRepository: MetricEntityRepository
 ): SubscriberRepository {
     override fun getAllSubscribers(): List<Subscriber> {
         return this.subscriberEntityRepository.findAll().map { it.toSubscriber() }
@@ -21,9 +21,16 @@ class SubscriberRepositoryImpl(
         return this.subscriberEntityRepository.findById(id).orElse(null)?.toSubscriber()
     }
 
-    override fun createSubscriber(subscriber: Subscriber): Boolean {
+    override fun createSubscriber(subscriber: Subscriber, metricIds: List<Long>): Boolean {
         SubscriberEntity.newSubscriber(subscriber)
-            .let { this.subscriberEntityRepository.save(it) }
+            .let { subscriberEntity ->
+                this.subscriberEntityRepository.save(subscriberEntity)
+                this.metricSubscriberEntityRepository.saveAll(
+                    this.metricEntityRepository.findAllById(metricIds).map {
+                        MetricSubscriberEntity(null, it, subscriberEntity)
+                    }
+                )
+            }
         return true
     }
 
