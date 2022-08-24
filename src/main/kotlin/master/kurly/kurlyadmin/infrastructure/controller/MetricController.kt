@@ -70,13 +70,8 @@ class MetricController(
     @DeleteMapping("/delete")
     fun deleteMetricById(
         @RequestParam("id") id: Long
-    ): Boolean {
-        return runCatching {
-            this.metricService.deleteMetricById(id)
-            true
-        }.onFailure { err ->
-            this.logger.error("에러 발생! : $err")
-        }.getOrDefault(false)
+    ){
+        this.metricService.deleteMetricById(id)
     }
 
     @PostMapping("/subscriber")

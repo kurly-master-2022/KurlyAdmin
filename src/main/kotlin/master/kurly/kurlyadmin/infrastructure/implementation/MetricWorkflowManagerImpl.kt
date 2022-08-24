@@ -27,7 +27,11 @@ class MetricWorkflowManagerImpl(
     }
 
     override fun deleteMetricWorkflow(metric: Metric): Boolean {
-        return this.metricWorkflowApi.deleteMetricWorkflow(metric)
+        return if (metric.isScheduled){
+            this.metricWorkflowApi.deleteMetricWorkflow(metric)
+        }else{
+            true
+        }
     }
 
     override fun addSubscriber(subscriber: Subscriber, metrics: List<Metric>) {
